@@ -1,0 +1,649 @@
+/* ============================================================
+   디자인 토큰 (CSS 커스텀 프로퍼티)
+   - 색상, 타이포그래피, 간격, 그림자를 변수로 정의
+============================================================ */
+:root {
+  /* 메인 컬러 팔레트 */
+  --color-primary:       #672be0;
+  --color-primary-hover: #7f47e8;
+  --color-primary-active:#5120c4;
+  --color-primary-bg:    #f0ebfd;
+
+  /* 서피스 & 배경 */
+  --color-surface:       #ffffff;
+  --color-background:    #f4f4f6;
+  --color-border:        #e5e5ea;
+
+  /* 텍스트 */
+  --color-text:          #1a1a1a;
+  --color-text-secondary:#6e6e73;
+  --color-text-muted:    #aeaeb2;
+
+  /* 상태 색상 */
+  --color-danger:        #ff3b30;
+  --color-danger-bg:     #fff0ef;
+
+  /* 타이포그래피 */
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  2rem;
+
+  /* 간격 */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* 모서리 반경 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* 전환 */
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+}
+
+/* ============================================================
+   리셋 & 기본 스타일
+============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+/* ============================================================
+   앱 레이아웃
+============================================================ */
+.app-container {
+  width: 100%;
+  max-width: 600px;
+}
+
+/* ============================================================
+   헤더
+============================================================ */
+.app-header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.app-title {
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.5px;
+}
+
+.app-subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+/* ============================================================
+   주간 뷰
+============================================================ */
+.week-nav {
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 주간 뷰 헤더: 이전/다음 버튼 + 주 범위 텍스트 */
+.week-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+/* 주 범위 텍스트와 '이번 주로 이동' 버튼을 묶는 컨테이너 */
+.week-range-display {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.week-range-text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 이전 / 다음 주 버튼 */
+.week-nav-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--duration-fast),
+    color var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+.week-nav-btn:hover  { background-color: var(--color-primary-bg); color: var(--color-primary); }
+.week-nav-btn:active { transform: scale(0.9); }
+
+/* '이번 주로 이동' 버튼 — 현재 주가 아닐 때만 is-visible로 표시 */
+.current-week-btn {
+  display: none;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: var(--color-primary);
+  background-color: transparent;
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+.current-week-btn.is-visible  { display: inline-block; }
+.current-week-btn:hover       { background-color: var(--color-primary-bg); }
+.current-week-btn:active      { transform: scale(0.95); }
+
+/* 날짜 셀 그리드 — 7열 균등 분할 */
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-1);
+}
+
+/* 개별 날짜 셀 */
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) var(--space-1);
+  border: none;
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition:
+    background-color var(--duration-fast),
+    color var(--duration-fast);
+}
+
+.week-day:hover:not(.is-selected) {
+  background-color: var(--color-primary-bg);
+}
+
+/* 요일 레이블 (월, 화, 수...) */
+.week-day-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* 날짜 숫자 */
+.week-day-number {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+/* 오늘 뱃지 — 항상 렌더링, 오늘이 아닐 때는 공간만 차지 */
+.week-day-today-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-primary);
+  background-color: var(--color-primary-bg);
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+  line-height: 1.4;
+  visibility: hidden;
+}
+
+.week-day-today-badge.is-visible {
+  visibility: visible;
+}
+
+/* Todo 개수 표시 — has-count 클래스일 때만 보임 */
+.week-day-count {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--color-primary);
+  min-height: 16px; /* 개수 없을 때도 레이아웃 높이 유지 */
+  visibility: hidden;
+}
+
+.week-day-count.has-count {
+  visibility: visible;
+}
+
+/* 오늘 날짜 셀 스타일 */
+.week-day.is-today .week-day-label  { color: var(--color-primary); font-weight: 700; }
+.week-day.is-today .week-day-number { color: var(--color-primary); }
+
+/* 선택된 날짜 셀 스타일 */
+.week-day.is-selected {
+  background-color: var(--color-primary);
+}
+
+.week-day.is-selected .week-day-label,
+.week-day.is-selected .week-day-number,
+.week-day.is-selected .week-day-count {
+  color: #ffffff;
+}
+
+/* 선택된 셀의 오늘 뱃지 — 흰 배경에 보라 텍스트로 반전 */
+.week-day.is-selected .week-day-today-badge {
+  color: var(--color-primary);
+  background-color: #ffffff;
+}
+
+.week-day.is-selected:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* ============================================================
+   입력 영역
+============================================================ */
+.input-section {
+  margin-bottom: var(--space-5);
+}
+
+.input-wrapper {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.todo-input {
+  flex: 1;
+  height: 48px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-base);
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition:
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.todo-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.todo-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(103, 43, 224, 0.12);
+}
+
+/* 빈 입력값 제출 시 에러 상태 */
+.todo-input.is-error {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.12);
+}
+
+.add-btn {
+  height: 48px;
+  padding: 0 var(--space-5);
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-family: var(--font-family);
+  color: #ffffff;
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+.add-btn:hover  { background-color: var(--color-primary-hover); }
+.add-btn:active { background-color: var(--color-primary-active); transform: scale(0.97); }
+
+/* ============================================================
+   오류 메시지 (추가 인풋 하단)
+============================================================ */
+.error-msg {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  min-height: 20px;
+  margin-top: var(--space-2);
+  padding-left: var(--space-1);
+}
+
+/* ============================================================
+   필터 탭
+============================================================ */
+.filter-section {
+  margin-bottom: var(--space-4);
+}
+
+/* 탭 컨테이너 — 회색 필 배경 위에 탭들이 나란히 배치됨 */
+.filter-tabs {
+  display: inline-flex;
+  gap: var(--space-1);
+  background-color: var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 3px;
+}
+
+.filter-tab {
+  height: 32px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-family: var(--font-family);
+  color: var(--color-text-secondary);
+  background-color: transparent;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast),
+    color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+.filter-tab:hover:not(.is-active) {
+  color: var(--color-text);
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+/* 활성 탭: 흰 배경 + 그림자로 선택 상태를 명확히 표현 */
+.filter-tab.is-active {
+  color: var(--color-primary);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+
+/* ============================================================
+   통계 영역
+============================================================ */
+.stats-section {
+  margin-bottom: var(--space-3);
+}
+
+.stats-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   Todo 목록
+============================================================ */
+.todo-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* 개별 Todo 아이템 */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--duration-fast),
+    border-color var(--duration-fast),
+    opacity var(--duration-normal);
+}
+
+.todo-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #d0d0d8;
+}
+
+/* 편집 중일 때는 아이템을 세로 정렬 기준으로 위쪽에 맞춤 */
+.todo-item:has(.edit-wrapper) {
+  align-items: flex-start;
+}
+
+/* 완료된 아이템은 흐리게 표시 */
+.todo-item.is-completed {
+  opacity: 0.6;
+}
+
+/* ============================================================
+   체크박스 (완료 토글)
+============================================================ */
+.todo-checkbox {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-surface);
+  /* 편집 래퍼가 있을 때 체크박스를 인풋 높이에 맞춰 정렬 */
+  margin-top: 3px;
+  transition:
+    background-color var(--duration-fast),
+    border-color var(--duration-fast);
+}
+
+.todo-checkbox:hover { border-color: var(--color-primary); }
+
+/* 완료 상태의 체크박스 */
+.todo-checkbox.is-checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+/* 체크 아이콘 (CSS로 구현) */
+.todo-checkbox.is-checked::after {
+  content: '';
+  width: 6px;
+  height: 10px;
+  border: 2px solid #ffffff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+/* ============================================================
+   Todo 텍스트
+============================================================ */
+.todo-text {
+  flex: 1;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  word-break: break-word;
+  transition: color var(--duration-fast);
+}
+
+/* 완료된 Todo에는 취소선 표시 */
+.todo-item.is-completed .todo-text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   편집 래퍼 (인풋 + 에러 메시지를 세로로 묶는 컨테이너)
+   - todo-item의 flex 자식으로 flex: 1을 차지한다
+============================================================ */
+.edit-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0; /* flex 자식의 overflow 방지 */
+}
+
+/* ============================================================
+   수정 인풋 (인라인 편집)
+============================================================ */
+.todo-edit-input {
+  width: 100%; /* edit-wrapper가 너비를 결정하므로 100% 사용 */
+  font-size: var(--text-base);
+  font-family: var(--font-family);
+  color: var(--color-text);
+  background-color: var(--color-primary-bg);
+  border: 1.5px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(103, 43, 224, 0.12);
+  transition:
+    border-color var(--duration-fast),
+    box-shadow var(--duration-fast);
+}
+
+/* 편집 인풋 에러 상태 */
+.todo-edit-input.is-error {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.12);
+  background-color: var(--color-danger-bg);
+}
+
+/* ============================================================
+   편집 에러 메시지 (edit-wrapper 하단에 동적으로 추가됨)
+============================================================ */
+.edit-error-msg {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  padding-left: var(--space-1);
+}
+
+/* ============================================================
+   액션 버튼 (수정 / 저장 / 삭제)
+============================================================ */
+.todo-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  /* 편집 래퍼가 있을 때 버튼을 인풋 높이에 맞춰 정렬 */
+  margin-top: 1px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color var(--duration-fast),
+    color var(--duration-fast),
+    transform var(--duration-fast);
+}
+
+.action-btn:active { transform: scale(0.9); }
+
+/* 수정 버튼 */
+.edit-btn   { color: var(--color-text-secondary); background-color: transparent; }
+/* 저장 버튼 */
+.save-btn   { color: var(--color-primary);        background-color: var(--color-primary-bg); }
+/* 삭제 버튼 */
+.delete-btn { color: var(--color-text-muted);     background-color: transparent; }
+
+.edit-btn:hover   { background-color: var(--color-primary-bg); color: var(--color-primary); }
+.save-btn:hover   { background-color: var(--color-primary);    color: #ffffff; }
+.delete-btn:hover { background-color: var(--color-danger-bg);  color: var(--color-danger); }
+
+/* ============================================================
+   빈 상태 메시지
+============================================================ */
+.empty-state {
+  display: none;
+  text-align: center;
+  padding: var(--space-12) var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+}
+
+.empty-state.is-visible {
+  display: block;
+}
+
+/* ============================================================
+   반응형 (모바일)
+============================================================ */
+@media (max-width: 480px) {
+  body {
+    padding: var(--space-6) var(--space-3);
+  }
+
+  .app-title {
+    font-size: var(--text-2xl);
+  }
+
+  .add-btn {
+    padding: 0 var(--space-4);
+  }
+
+  /* 모바일에서 필터 탭이 전체 너비를 차지하도록 확장 */
+  .filter-tabs {
+    width: 100%;
+    display: flex;
+  }
+
+  .filter-tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  /* 모바일에서 날짜 셀 패딩 축소 */
+  .week-day {
+    padding: var(--space-2) 2px;
+  }
+
+  .week-day-number {
+    font-size: var(--text-sm);
+  }
+}
