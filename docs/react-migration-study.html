@@ -1,0 +1,1829 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>React Todo 마이그레이션 학습실</title>
+  <style>
+    :root {
+      --primary: #672be0;
+      --primary-hover: #7f47e8;
+      --primary-dark: #5120c4;
+      --primary-soft: #f0ebfd;
+      --surface: #ffffff;
+      --background: #f4f4f6;
+      --border: #e5e5ea;
+      --text: #1a1a1a;
+      --text-secondary: #6e6e73;
+      --text-muted: #8e8e93;
+      --danger: #d92d20;
+      --danger-soft: #fff0ef;
+      --success: #137a4b;
+      --success-soft: #eaf8f1;
+      --warning: #9a6700;
+      --warning-soft: #fff8db;
+      --code: #18181b;
+      --radius: 18px;
+      --shadow: 0 12px 36px rgb(26 26 26 / 8%);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 10% 0%, rgb(103 43 224 / 12%), transparent 28rem),
+        var(--background);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+    }
+
+    button,
+    textarea,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    textarea:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgb(103 43 224 / 28%);
+      outline-offset: 3px;
+    }
+
+    code {
+      border-radius: 6px;
+      background: var(--primary-soft);
+      padding: 0.12em 0.4em;
+      color: var(--primary-dark);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    pre {
+      margin: 0;
+      overflow: auto;
+      border-radius: 14px;
+      background: var(--code);
+      padding: 18px;
+      color: #f4f4f5;
+      font: 13px/1.65 "SFMono-Regular", Consolas, monospace;
+      white-space: pre;
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: rgb(255 255 255 / 92%);
+      padding: 24px 18px;
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      margin: 0 8px 18px;
+    }
+
+    .brand strong {
+      display: block;
+      color: var(--primary);
+      font-size: 20px;
+      letter-spacing: -0.03em;
+    }
+
+    .brand span {
+      display: block;
+      margin-top: 4px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .progress-shell {
+      margin: 0 8px 22px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 7px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .progress-track {
+      height: 9px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--border);
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+      transition: width 220ms ease;
+    }
+
+    .step-nav {
+      display: grid;
+      gap: 7px;
+    }
+
+    .step-button {
+      width: 100%;
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      padding: 10px 12px;
+      color: var(--text-secondary);
+      text-align: left;
+      transition: 150ms ease;
+    }
+
+    .step-button:hover {
+      background: var(--primary-soft);
+      color: var(--primary);
+    }
+
+    .step-button[aria-selected="true"] {
+      background: var(--primary);
+      color: white;
+      font-weight: 750;
+      box-shadow: 0 6px 16px rgb(103 43 224 / 22%);
+    }
+
+    .sidebar-actions {
+      display: grid;
+      gap: 8px;
+      margin: 22px 8px 0;
+    }
+
+    .small-button {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      padding: 8px 10px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .small-button:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    main {
+      min-width: 0;
+      padding: 44px clamp(20px, 5vw, 72px) 80px;
+    }
+
+    .hero {
+      max-width: 1080px;
+      margin: 0 auto 28px;
+      border: 1px solid rgb(103 43 224 / 18%);
+      border-radius: 24px;
+      background:
+        linear-gradient(135deg, rgb(103 43 224 / 95%), rgb(81 32 196 / 96%));
+      padding: clamp(26px, 5vw, 52px);
+      color: white;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 7px;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.78;
+    }
+
+    .hero h1 {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.15;
+      letter-spacing: -0.045em;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 18px 0 0;
+      color: rgb(255 255 255 / 82%);
+      font-size: 16px;
+    }
+
+    .hero-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 22px;
+      border: 1px solid rgb(255 255 255 / 28%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 11%);
+      padding: 8px 13px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .panel {
+      display: none;
+      max-width: 1080px;
+      margin: 0 auto;
+      animation: enter 180ms ease;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes enter {
+      from {
+        transform: translateY(5px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.2;
+      letter-spacing: -0.035em;
+    }
+
+    .section-heading p {
+      margin: 8px 0 0;
+      color: var(--text-secondary);
+    }
+
+    .done-label {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface);
+      padding: 8px 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .done-label input {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--primary);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 22px;
+      box-shadow: 0 5px 18px rgb(26 26 26 / 4%);
+    }
+
+    .card h3,
+    .card h4 {
+      margin: 0 0 10px;
+      letter-spacing: -0.025em;
+    }
+
+    .card p:last-child {
+      margin-bottom: 0;
+    }
+
+    .muted {
+      color: var(--text-secondary);
+    }
+
+    .callout {
+      margin: 16px 0;
+      border-left: 5px solid var(--primary);
+      border-radius: 13px;
+      background: var(--primary-soft);
+      padding: 16px 18px;
+    }
+
+    .callout.warning {
+      border-color: #e2a500;
+      background: var(--warning-soft);
+    }
+
+    .callout.danger {
+      border-color: var(--danger);
+      background: var(--danger-soft);
+    }
+
+    .callout.success {
+      border-color: var(--success);
+      background: var(--success-soft);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 14px;
+    }
+
+    .tag {
+      border-radius: 999px;
+      background: var(--background);
+      padding: 4px 9px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin: 14px 0 0;
+    }
+
+    .flow-step {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+      padding: 8px 11px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .flow-arrow {
+      color: var(--primary);
+      font-weight: 900;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .module-button {
+      min-height: 88px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 12px;
+      color: var(--text);
+      text-align: left;
+      transition: 150ms ease;
+    }
+
+    .module-button:hover,
+    .module-button.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      transform: translateY(-2px);
+    }
+
+    .module-button strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--primary);
+    }
+
+    .module-button span {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .module-detail {
+      min-height: 92px;
+      margin-top: 12px;
+      border-radius: 14px;
+      background: var(--background);
+      padding: 16px;
+      color: var(--text-secondary);
+    }
+
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .comparison-side {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 18px;
+    }
+
+    .comparison-side h4 {
+      margin: 0 0 10px;
+    }
+
+    .comparison-arrow {
+      align-self: center;
+      color: var(--primary);
+      font-size: 24px;
+      font-weight: 900;
+    }
+
+    .exercise {
+      margin-top: 16px;
+      border: 1px solid rgb(103 43 224 / 24%);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 22px;
+    }
+
+    .exercise-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .exercise-header h3 {
+      margin: 0;
+    }
+
+    .difficulty {
+      flex: 0 0 auto;
+      color: var(--warning);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .code-editor,
+    .study-note {
+      width: 100%;
+      resize: vertical;
+      border: 1px solid #3f3f46;
+      border-radius: 13px;
+      background: var(--code);
+      padding: 16px;
+      color: #f4f4f5;
+      font: 13px/1.6 "SFMono-Regular", Consolas, monospace;
+      tab-size: 2;
+    }
+
+    .code-editor {
+      min-height: 170px;
+    }
+
+    .study-note {
+      min-height: 120px;
+      border-color: var(--border);
+      background: #fff;
+      color: var(--text);
+      font-family: inherit;
+    }
+
+    .exercise-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .action-button {
+      border: 0;
+      border-radius: 10px;
+      background: var(--primary);
+      padding: 8px 12px;
+      color: white;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .action-button:hover {
+      background: var(--primary-hover);
+    }
+
+    .action-button.secondary {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-secondary);
+    }
+
+    .action-button.secondary:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .feedback {
+      min-height: 26px;
+      margin-top: 10px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .feedback.success {
+      color: var(--success);
+    }
+
+    .feedback.error {
+      color: var(--danger);
+    }
+
+    .hidden-answer {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .hidden-answer.open {
+      display: block;
+    }
+
+    .concept-question {
+      border-top: 1px solid var(--border);
+      padding: 14px 0;
+    }
+
+    .concept-question:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .question-button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      color: var(--text);
+      text-align: left;
+      font-weight: 800;
+    }
+
+    .question-answer {
+      display: none;
+      margin: 10px 0 0;
+      border-radius: 10px;
+      background: var(--background);
+      padding: 12px;
+      color: var(--text-secondary);
+    }
+
+    .question-answer.open {
+      display: block;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .summary-table th,
+    .summary-table td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .summary-table th {
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .status {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .status.good {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .status.check {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .status.todo {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .simulator-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .simulator-track {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .simulator-node {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      padding: 12px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      text-align: center;
+      transition: 180ms ease;
+    }
+
+    .simulator-node.active {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+      color: var(--primary-dark);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 14px rgb(103 43 224 / 14%);
+    }
+
+    .checklist {
+      display: grid;
+      gap: 9px;
+    }
+
+    .checklist label {
+      display: flex;
+      gap: 9px;
+      align-items: flex-start;
+      border-radius: 10px;
+      padding: 8px;
+    }
+
+    .checklist label:hover {
+      background: var(--background);
+    }
+
+    .checklist input {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      accent-color: var(--primary);
+    }
+
+    .footer-note {
+      max-width: 1080px;
+      margin: 32px auto 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .layout {
+        display: block;
+      }
+
+      .sidebar {
+        position: sticky;
+        z-index: 20;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        padding: 12px;
+      }
+
+      .brand,
+      .progress-shell,
+      .sidebar-actions {
+        display: none;
+      }
+
+      .step-nav {
+        display: flex;
+        overflow-x: auto;
+        gap: 7px;
+        scrollbar-width: thin;
+      }
+
+      .step-button {
+        width: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      main {
+        padding-top: 24px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .grid.two,
+      .grid.three,
+      .architecture {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+
+      .comparison-arrow {
+        transform: rotate(90deg);
+        justify-self: center;
+      }
+
+      .section-heading {
+        display: block;
+      }
+
+      .done-label {
+        margin-top: 12px;
+      }
+
+      .simulator-track {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>React Todo 학습실</strong>
+        <span>현재 코드 기준 단계별 해설</span>
+      </div>
+
+      <div class="progress-shell">
+        <div class="progress-label">
+          <span>학습 진행률</span>
+          <span id="progressText">0 / 8</span>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <nav class="step-nav" aria-label="학습 단계">
+        <button class="step-button" data-panel="overview" aria-selected="true">0. 전체 지도</button>
+        <button class="step-button" data-panel="setup" aria-selected="false">1. 프로젝트 세팅</button>
+        <button class="step-button" data-panel="crud" aria-selected="false">2. Todo CRUD</button>
+        <button class="step-button" data-panel="filter" aria-selected="false">3. 상태 필터</button>
+        <button class="step-button" data-panel="daily" aria-selected="false">4. 일간 뷰</button>
+        <button class="step-button" data-panel="storage" aria-selected="false">5. localStorage</button>
+        <button class="step-button" data-panel="weekly" aria-selected="false">도전. 주간 뷰</button>
+        <button class="step-button" data-panel="final" aria-selected="false">최종 검토</button>
+      </nav>
+
+      <div class="sidebar-actions">
+        <button class="small-button" id="exportNotes">내 메모 내보내기</button>
+        <button class="small-button" id="resetProgress">학습 기록 초기화</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="hero">
+        <p class="eyebrow">No panic, build a mental model</p>
+        <h1>코드를 외우지 말고<br>상태가 흐르는 길을 이해하기</h1>
+        <p>
+          이 페이지는 현재 프로젝트의 실제 코드와 마이그레이션 문서를 기준으로 만든 학습 자료입니다.
+          각 단계에서 "누가 state를 소유하고, 어떤 이벤트가 state를 바꾸며, 무엇이 다시 렌더링되는가"를 설명할 수 있으면 핵심 동작을 스스로 이해하고 설명할 수 있습니다.
+        </p>
+        <div class="hero-note">메모와 완료 상태는 이 학습 페이지의 localStorage에만 저장됩니다.</div>
+      </header>
+
+      <section class="panel active" id="overview" data-step="overview">
+        <div class="section-heading">
+          <div>
+            <h2>0. 먼저 전체 지도를 잡기</h2>
+            <p>파일을 한 줄씩 읽기 전에 데이터와 책임의 방향부터 봅니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="overview">
+            이해 완료
+          </label>
+        </div>
+
+        <div class="callout warning">
+          <strong>지금 가장 위험한 학습 방법</strong>
+          <span><code>App.jsx</code> 첫 줄부터 Tailwind className까지 전부 이해하려는 방식입니다. 먼저 state, props, event, derived value 네 종류만 추적하세요.</span>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>이 앱의 한 문장 설명</h3>
+            <p>
+              <code>App</code>이 Todo 원본과 화면 선택 상태를 소유하고,
+              하위 컴포넌트는 props로 받은 값은 표시하고 callback으로 사용자 의도를 위로 전달합니다.
+            </p>
+            <div class="flow" aria-label="React 데이터 흐름">
+              <span class="flow-step">사용자 이벤트</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">callback prop</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">setState</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">파생값 재계산</span>
+              <span class="flow-arrow">→</span>
+              <span class="flow-step">리렌더</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>먼저 외울 4가지 질문</h3>
+            <ol>
+              <li>이 값은 state인가, props인가, 계산 가능한 파생값인가?</li>
+              <li>이 state를 소유한 컴포넌트는 어디인가?</li>
+              <li>사용자 이벤트는 어느 handler를 호출하는가?</li>
+              <li>state 변경 후 어떤 컴포넌트가 새 props를 받는가?</li>
+            </ol>
+          </article>
+        </div>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>모듈 지도: 카드를 눌러 책임 확인</h3>
+          <div class="architecture">
+            <button class="module-button active" data-module="app">
+              <strong>App.jsx</strong>
+              <span>공유 state와 업무 규칙</span>
+            </button>
+            <button class="module-button" data-module="input">
+              <strong>TodoInput</strong>
+              <span>추가 입력 draft와 검증</span>
+            </button>
+            <button class="module-button" data-module="list">
+              <strong>TodoList / Item</strong>
+              <span>목록 표시와 인라인 편집</span>
+            </button>
+            <button class="module-button" data-module="filter">
+              <strong>TodoFilter</strong>
+              <span>필터 선택 UI</span>
+            </button>
+            <button class="module-button" data-module="date">
+              <strong>WeekNavigator</strong>
+              <span>주간 날짜 표시와 선택 요청</span>
+            </button>
+            <button class="module-button" data-module="storage">
+              <strong>utils/storage.js</strong>
+              <span>영속 데이터 계약</span>
+            </button>
+            <button class="module-button" data-module="dateUtil">
+              <strong>utils/date.js</strong>
+              <span>날짜 정규화와 검증</span>
+            </button>
+            <button class="module-button" data-module="tests">
+              <strong>App.test.jsx</strong>
+              <span>사용자 관점의 회귀 방지</span>
+            </button>
+          </div>
+          <div class="module-detail" id="moduleDetail" aria-live="polite"></div>
+        </article>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>렌더링 흐름 시뮬레이터</h3>
+          <p class="muted">동작을 누른 뒤 강조되는 순서를 말로 설명해보세요.</p>
+          <div class="simulator-controls">
+            <button class="action-button" data-flow="add">Todo 추가</button>
+            <button class="action-button secondary" data-flow="filter">필터 변경</button>
+            <button class="action-button secondary" data-flow="date">날짜 이동</button>
+          </div>
+          <div class="simulator-track">
+            <div class="simulator-node" data-flow-node="0">1. 자식 UI 이벤트</div>
+            <div class="simulator-node" data-flow-node="1">2. App handler 호출</div>
+            <div class="simulator-node" data-flow-node="2">3. state 변경</div>
+            <div class="simulator-node" data-flow-node="3">4. useMemo 파생값</div>
+            <div class="simulator-node" data-flow-node="4">5. 새 props로 리렌더</div>
+          </div>
+          <p class="feedback" id="flowExplanation">동작을 선택하세요.</p>
+        </article>
+
+        <article class="exercise">
+          <div class="exercise-header">
+            <h3>내 말로 설명하기</h3>
+            <span class="difficulty">가장 중요</span>
+          </div>
+          <p>App, TodoInput, TodoItem 사이에서 Todo 추가가 어떻게 흐르는지 4문장 이내로 적어보세요.</p>
+          <textarea class="study-note" data-note="overview" placeholder="예: TodoInput은 입력 문자열을 로컬 state로 관리한다. 폼 제출 시..."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="setup" data-step="setup">
+        <div class="section-heading">
+          <div>
+            <h2>1. 프로젝트 세팅</h2>
+            <p>Vite는 실행 환경, React는 UI 모델, Tailwind는 스타일 도구입니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="setup">
+            이해 완료
+          </label>
+        </div>
+
+        <div class="grid three">
+          <article class="card">
+            <h3>Vite</h3>
+            <p>개발 서버, 모듈 변환, production build를 담당합니다.</p>
+            <div class="tag-row">
+              <span class="tag">npm run dev</span>
+              <span class="tag">npm run build</span>
+              <span class="tag">vite.config.js</span>
+            </div>
+          </article>
+          <article class="card">
+            <h3>React</h3>
+            <p><code>main.jsx</code>가 root에 <code>App</code>을 렌더링하고 state 변화에 따라 UI를 갱신합니다.</p>
+            <div class="tag-row">
+              <span class="tag">StrictMode</span>
+              <span class="tag">createRoot</span>
+              <span class="tag">Function Component</span>
+            </div>
+          </article>
+          <article class="card">
+            <h3>Tailwind v4</h3>
+            <p><code>index.css</code>의 <code>@theme</code> 토큰을 JSX className에서 사용합니다.</p>
+            <div class="tag-row">
+              <span class="tag">bg-primary</span>
+              <span class="tag">text-text</span>
+              <span class="tag">@tailwindcss/vite</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="comparison" style="margin-top: 16px;">
+          <article class="comparison-side">
+            <h4>브라우저에 직접 HTML 작성</h4>
+            <p class="muted">HTML 파일이 UI 구조를 모두 갖고 script가 DOM을 찾습니다.</p>
+          </article>
+          <div class="comparison-arrow">→</div>
+          <article class="comparison-side">
+            <h4>React 진입점</h4>
+            <p class="muted"><code>main.jsx</code>가 <code>#root</code>에 컴포넌트 트리를 렌더링합니다.</p>
+          </article>
+        </div>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>현재 설정에서 설명할 수 있어야 하는 것</h3>
+          <pre><code>createRoot(document.getElementById('root')).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+)</code></pre>
+          <ul>
+            <li><code>#root</code>는 React가 관리하는 DOM 영역입니다.</li>
+            <li><code>StrictMode</code>는 개발 중 순수하지 않은 로직을 찾기 위해 일부 작업을 반복할 수 있습니다.</li>
+            <li>그래서 storage initializer는 읽기만 하고, Effect는 반복돼도 결과가 같아야 합니다.</li>
+          </ul>
+        </article>
+
+        <article class="exercise">
+          <div class="exercise-header">
+            <h3>생각나는 질문들</h3>
+            <span class="difficulty">기초</span>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">Vite와 React는 각각 무슨 역할인가요?</button>
+            <p class="question-answer">Vite는 개발 서버와 build 도구이고, React는 state와 props를 바탕으로 UI를 선언적으로 렌더링하는 라이브러리입니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">Tailwind 설정이 적용되는 경로를 설명해보세요.</button>
+            <p class="question-answer"><code>vite.config.js</code>의 Tailwind Vite 플러그인이 빌드에 참여하고, <code>index.css</code>가 Tailwind를 import하며, <code>main.jsx</code>가 그 CSS를 import합니다.</p>
+          </div>
+          <textarea class="study-note" data-note="setup" placeholder="내 답변을 먼저 적은 후 질문을 눌러 예시 답변을 확인하세요."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="crud" data-step="crud">
+        <div class="section-heading">
+          <div>
+            <h2>2. Todo CRUD</h2>
+            <p>원본 Todo 배열은 App, 입력 draft와 편집 draft는 사용하는 컴포넌트 가까이에 둡니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="crud">
+            이해 완료
+          </label>
+        </div>
+
+        <div class="comparison">
+          <article class="comparison-side">
+            <h4>Vanilla JS</h4>
+            <ul>
+              <li>전역 배열을 직접 변경</li>
+              <li><code>renderTodos()</code>를 수동 호출</li>
+              <li>DOM 요소를 직접 생성·교체</li>
+            </ul>
+          </article>
+          <div class="comparison-arrow">→</div>
+          <article class="comparison-side">
+            <h4>현재 React 코드</h4>
+            <ul>
+              <li><code>setTodos</code>로 새 배열 생성</li>
+              <li>state 변경이 자동 리렌더 유발</li>
+              <li><code>isEditing</code>으로 JSX 분기</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="grid two" style="margin-top: 16px;">
+          <article class="card">
+            <h3>state 위치가 핵심</h3>
+            <ul>
+              <li><code>todos</code>: 모든 목록이 공유하므로 App</li>
+              <li><code>editingId</code>: 한 번에 하나만 편집하므로 App</li>
+              <li><code>inputText</code>: TodoInput만 사용하므로 TodoInput</li>
+              <li><code>editText</code>: 개별 TodoItem의 draft이므로 TodoItem</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>불변성 규칙</h3>
+            <pre><code>// 추가
+[...previousTodos, newTodo]
+
+// 수정·완료
+previousTodos.map(todo =&gt;
+  todo.id === id ? { ...todo, text } : todo
+)
+
+// 삭제
+previousTodos.filter(todo =&gt; todo.id !== id)</code></pre>
+          </article>
+        </div>
+
+        <div class="callout success">
+          <strong>이미 보완된 오류</strong>
+          <span>한글 IME 조합 중 Enter 제출 방지, 빈 입력 재포커스, Escape 편집 취소, 편집 input 커서를 끝으로 이동, 100자 제한이 구현되고 테스트됩니다.</span>
+        </div>
+
+        <article class="exercise" data-exercise="crud">
+          <div class="exercise-header">
+            <h3>직접 수정: Todo 추가 로직 완성</h3>
+            <span class="difficulty">핵심</span>
+          </div>
+          <p>기존 배열을 직접 수정하지 않고 새 배열을 만들어야 합니다.</p>
+          <textarea class="code-editor">const handleAddTodo = (text) => {
+  const newTodo = {
+    id: createTodoId(),
+    text: text.trim(),
+    completed: false,
+    date: getDateKey(selectedDate),
+  }
+
+  // 여기를 직접 작성하세요.
+}</textarea>
+          <div class="exercise-actions">
+            <button class="action-button check-code" data-requires="setTodos|previousTodos|...previousTodos|newTodo">내 코드 확인</button>
+            <button class="action-button secondary show-hint">힌트</button>
+            <button class="action-button secondary show-answer">정답 비교</button>
+          </div>
+          <p class="feedback"></p>
+          <div class="hidden-answer hint"><div class="callout">함수형 업데이트에서 이전 배열을 받아 spread로 새 배열을 만드세요.</div></div>
+          <div class="hidden-answer answer"><pre><code>setTodos((previousTodos) =&gt; [...previousTodos, newTodo])</code></pre></div>
+        </article>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>생각나는 질문들</h3>
+          <div class="concept-question">
+            <button class="question-button">왜 editText를 App이 아니라 TodoItem에 두었나요?</button>
+            <p class="question-answer">편집 중 임시 문자열은 해당 항목만 사용하는 로컬 관심사입니다. 반면 editingId는 여러 항목 중 하나만 편집되게 조정해야 해서 App이 소유합니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">왜 배열의 push나 todo.completed 직접 대입을 사용하지 않나요?</button>
+            <p class="question-answer">React는 state 참조 변경을 기준으로 갱신을 판단합니다. 기존 값을 직접 수정하면 변경 추적과 이전 state 보존이 깨질 수 있어 새 배열과 새 객체를 만듭니다.</p>
+          </div>
+          <textarea class="study-note" data-note="crud" placeholder="Create → Update → Complete → Delete 흐름을 직접 설명해보세요."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="filter" data-step="filter">
+        <div class="section-heading">
+          <div>
+            <h2>3. 상태별 필터링</h2>
+            <p>필터 결과를 state로 복제하지 않고 원본 state에서 계산합니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="filter">
+            이해 완료
+          </label>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>원본 state</h3>
+            <p><code>todos</code>와 <code>filter</code>만 저장합니다.</p>
+            <p class="muted">필터링된 배열은 원본이 바뀌면 다시 계산할 수 있으므로 별도 state가 아닙니다.</p>
+          </article>
+          <article class="card">
+            <h3>파생값</h3>
+            <pre><code>const filteredTodos = useMemo(() =&gt; {
+  if (filter === FILTER.ACTIVE) {
+    return todosForDate.filter(todo =&gt; !todo.completed)
+  }
+  if (filter === FILTER.COMPLETED) {
+    return todosForDate.filter(todo =&gt; todo.completed)
+  }
+  return todosForDate
+}, [todosForDate, filter])</code></pre>
+          </article>
+        </div>
+
+        <div class="callout">
+          <strong>필터가 바뀌면 왜 목록이 다시 그려질까?</strong>
+          <span><code>setFilter</code> → App 리렌더 → <code>filteredTodos</code> 재계산 → TodoList가 새 배열 props를 받기 때문입니다. DOM을 직접 숨기지 않습니다.</span>
+        </div>
+
+        <div class="callout warning">
+          <strong>세밀한 포인트</strong>
+          <span>필터 전환 시 <code>editingId</code>를 초기화합니다. 편집 중인 항목이 필터 결과에서 사라질 때 편집 대상 ID만 App에 남는 고아 상태를 막기 위해서입니다.</span>
+        </div>
+
+        <article class="exercise" data-exercise="filter">
+          <div class="exercise-header">
+            <h3>직접 수정: 진행 중 필터 완성</h3>
+            <span class="difficulty">기초</span>
+          </div>
+          <textarea class="code-editor">const filteredTodos = useMemo(() => {
+  if (filter === FILTER.ACTIVE) {
+    // 완료되지 않은 Todo만 반환하세요.
+  }
+
+  return todosForDate
+}, [todosForDate, filter])</textarea>
+          <div class="exercise-actions">
+            <button class="action-button check-code" data-requires="todosForDate.filter|!todo.completed">내 코드 확인</button>
+            <button class="action-button secondary show-hint">힌트</button>
+            <button class="action-button secondary show-answer">정답 비교</button>
+          </div>
+          <p class="feedback"></p>
+          <div class="hidden-answer hint"><div class="callout">배열의 <code>filter</code>와 boolean 부정 연산자를 사용합니다.</div></div>
+          <div class="hidden-answer answer"><pre><code>return todosForDate.filter((todo) =&gt; !todo.completed)</code></pre></div>
+        </article>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>생각나는 질문들</h3>
+          <div class="concept-question">
+            <button class="question-button">filteredTodos를 useState로 만들면 왜 좋지 않나요?</button>
+            <p class="question-answer">todos와 filter에서 계산 가능한 값을 또 저장하면 원본 변경 때마다 동기화해야 합니다. 누락 시 화면과 원본이 불일치하므로 파생값으로 둡니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">useMemo가 반드시 필요한가요?</button>
+            <p class="question-answer">정확성을 위해 필수는 아닙니다. 현재 과제에서는 파생값임을 명확히 하고 반복 계산을 제한하는 목적으로 사용했습니다. 작은 배열에서는 성능 차이가 크지 않다는 점도 설명할 수 있어야 합니다.</p>
+          </div>
+          <textarea class="study-note" data-note="filter" placeholder="필터 변경 시 데이터 흐름을 내 말로 적어보세요."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="daily" data-step="daily">
+        <div class="section-heading">
+          <div>
+            <h2>4. Todo 일간 뷰</h2>
+            <p>선택 날짜가 Todo의 생성 대상과 조회 조건을 동시에 결정합니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="daily">
+            이해 완료
+          </label>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>날짜 state</h3>
+            <p><code>selectedDate</code>는 Date 객체이며 App이 소유합니다.</p>
+            <pre><code>const [selectedDate, setSelectedDate] =
+  useState(loadSelectedDateFromStorage)</code></pre>
+          </article>
+          <article class="card">
+            <h3>날짜별 Todo</h3>
+            <p>Todo는 Date 객체가 아니라 <code>YYYY-MM-DD</code> 문자열을 저장합니다.</p>
+            <pre><code>const todosForDate = todos.filter(
+  todo =&gt; todo.date === getDateKey(selectedDate)
+)</code></pre>
+          </article>
+        </div>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>두 단계 파생 구조</h3>
+          <div class="flow">
+            <span class="flow-step">전체 todos</span>
+            <span class="flow-arrow">→ 날짜</span>
+            <span class="flow-step">todosForDate</span>
+            <span class="flow-arrow">→ 완료 상태</span>
+            <span class="flow-step">filteredTodos</span>
+            <span class="flow-arrow">→ props</span>
+            <span class="flow-step">TodoList</span>
+          </div>
+          <p class="muted">순서를 반대로 하더라도 결과는 만들 수 있지만, 현재 구조는 “날짜 화면 안에서 상태 필터를 적용한다”는 도메인 의미가 분명합니다.</p>
+        </article>
+
+        <div class="callout success">
+          <strong>이미 보완된 날짜 오류</strong>
+          <span><code>new Date('YYYY-MM-DD')</code>로 파싱하지 않고 연·월·일을 분리합니다. UTC 해석 때문에 한국 시간에서 전날로 보일 수 있는 문제를 피합니다.</span>
+        </div>
+
+        <div class="callout warning">
+          <strong>날짜 이동 때 편집 상태를 닫는 이유</strong>
+          <span>편집 중인 Todo가 이전 날짜 소속이면 새 날짜에서 컴포넌트가 사라집니다. <code>editingId</code>까지 초기화해야 다음에 돌아왔을 때 의도치 않게 편집 모드가 남지 않습니다.</span>
+        </div>
+
+        <article class="exercise" data-exercise="daily">
+          <div class="exercise-header">
+            <h3>직접 수정: 새 Todo의 날짜 연결</h3>
+            <span class="difficulty">핵심</span>
+          </div>
+          <textarea class="code-editor">const newTodo = {
+  id: createTodoId(),
+  text: normalizedText,
+  completed: false,
+  // 현재 선택된 날짜를 YYYY-MM-DD로 저장하세요.
+}</textarea>
+          <div class="exercise-actions">
+            <button class="action-button check-code" data-requires="date:|getDateKey(selectedDate)">내 코드 확인</button>
+            <button class="action-button secondary show-hint">힌트</button>
+            <button class="action-button secondary show-answer">정답 비교</button>
+          </div>
+          <p class="feedback"></p>
+          <div class="hidden-answer hint"><div class="callout">Date 객체 자체가 아니라 날짜 키를 저장합니다.</div></div>
+          <div class="hidden-answer answer"><pre><code>date: getDateKey(selectedDate),</code></pre></div>
+        </article>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>생각나는 질문들</h3>
+          <div class="concept-question">
+            <button class="question-button">왜 Todo마다 date를 저장하나요?</button>
+            <p class="question-answer">전체 Todo 배열 하나를 유지하면서 선택 날짜에 따라 조회하기 위해서입니다. 날짜별 배열을 여러 state로 나누지 않아 CRUD와 저장 계약이 단순해집니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">Date 객체를 state에서 직접 setDate로 수정하면 왜 안 되나요?</button>
+            <p class="question-answer">기존 state 객체를 직접 변경하는 것이므로 참조가 유지됩니다. 먼저 복사한 새 Date를 수정한 뒤 반환해야 React가 명확하게 새 값으로 처리합니다.</p>
+          </div>
+          <textarea class="study-note" data-note="daily" placeholder="selectedDate가 바뀐 뒤 목록이 달라지는 이유를 적어보세요."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="storage" data-step="storage">
+        <div class="section-heading">
+          <div>
+            <h2>5. localStorage</h2>
+            <p>초기 복원은 lazy initializer, 이후 자동 저장은 Effect가 담당합니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="storage">
+            이해 완료
+          </label>
+        </div>
+
+        <div class="comparison">
+          <article class="comparison-side">
+            <h4>Vanilla JS</h4>
+            <p>추가·수정·완료·삭제 함수마다 <code>saveTodos()</code>를 직접 호출했습니다.</p>
+          </article>
+          <div class="comparison-arrow">→</div>
+          <article class="comparison-side">
+            <h4>React</h4>
+            <p>CRUD는 state만 바꾸고, <code>useEffect([todos])</code>가 최신 state를 저장합니다.</p>
+          </article>
+        </div>
+
+        <div class="grid two" style="margin-top: 16px;">
+          <article class="card">
+            <h3>1. 최초 복원</h3>
+            <pre><code>const [todos, setTodos] =
+  useState(loadTodosFromStorage)</code></pre>
+            <p class="muted">함수 자체를 넘겨 마운트 초기값을 계산합니다. 컴포넌트 리렌더마다 storage를 읽지 않습니다.</p>
+          </article>
+          <article class="card">
+            <h3>2. 변경 후 저장</h3>
+            <pre><code>useEffect(() =&gt; {
+  saveTodosToStorage(todos)
+}, [todos])</code></pre>
+            <p class="muted"><code>todos</code> 참조가 바뀐 commit 이후 최신 배열을 저장합니다.</p>
+          </article>
+        </div>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>storage.js가 복잡한 이유</h3>
+          <p>localStorage의 문자열은 사용자가 개발자 도구로 바꿀 수 있고 이전 버전 데이터일 수도 있습니다. 따라서 JSON parse 성공만으로 신뢰하지 않습니다.</p>
+          <div class="flow">
+            <span class="flow-step">getItem</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-step">JSON.parse</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-step">배열 확인</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-step">필드 검증</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-step">ID 정규화·중복 제거</span>
+          </div>
+        </article>
+
+        <div class="callout success">
+          <strong>과제 최소 요구보다 강화된 부분</strong>
+          <span>손상 JSON 폴백, Todo 필드 검증, 안전하지 않은 숫자 ID 거부, 숫자 <code>1</code>과 문자열 <code>'1'</code> 중복 처리, 읽기·쓰기 예외 허용, 날짜 범위 검증까지 포함합니다.</span>
+        </div>
+
+        <article class="exercise" data-exercise="storage">
+          <div class="exercise-header">
+            <h3>직접 수정: 자동 저장 Effect</h3>
+            <span class="difficulty">필수 질문</span>
+          </div>
+          <textarea class="code-editor">useEffect(() => {
+  // todos를 storage에 저장하세요.
+}, [
+  // 어떤 의존성이 필요한가요?
+])</textarea>
+          <div class="exercise-actions">
+            <button class="action-button check-code" data-requires="saveTodosToStorage(todos)|todos">내 코드 확인</button>
+            <button class="action-button secondary show-hint">힌트</button>
+            <button class="action-button secondary show-answer">정답 비교</button>
+          </div>
+          <p class="feedback"></p>
+          <div class="hidden-answer hint"><div class="callout">Effect 안에서 읽는 reactive value는 의존성 배열에도 들어가야 합니다.</div></div>
+          <div class="hidden-answer answer"><pre><code>useEffect(() =&gt; {
+  saveTodosToStorage(todos)
+}, [todos])</code></pre></div>
+        </article>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>반드시 설명할 수 있어야 하는 질문</h3>
+          <div class="concept-question">
+            <button class="question-button">왜 useState(loadTodosFromStorage())가 아닌가요?</button>
+            <p class="question-answer">괄호로 즉시 호출하면 컴포넌트 함수가 실행될 때마다 storage 읽기가 먼저 수행됩니다. 함수 자체를 넘기면 React가 초기 state가 필요할 때 initializer로 실행합니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">Effect 의존성 배열을 []로 두면 어떻게 되나요?</button>
+            <p class="question-answer">마운트 뒤 한 번만 저장하므로 이후 CRUD 변경이 반영되지 않습니다. <code>todos</code> 변경을 감시해야 합니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">왜 저장 실패를 catch하고 무시하나요?</button>
+            <p class="question-answer">브라우저 저장 공간이나 보안 정책 문제로 저장이 실패해도 현재 메모리 state와 UI 조작까지 중단시키지 않기 위해서입니다.</p>
+          </div>
+          <textarea class="study-note" data-note="storage" placeholder="lazy initializer와 useEffect의 역할 차이를 적어보세요."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="weekly" data-step="weekly">
+        <div class="section-heading">
+          <div>
+            <h2>도전 미션. 주간 뷰</h2>
+            <p>구현된 주간 뷰를 따라가며 두 날짜 state와 파생값의 연결을 확인합니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="weekly">
+            구현 이해
+          </label>
+        </div>
+
+        <div class="callout success">
+          <strong>현재 구현 상태</strong>
+          <span><code>DateNavigator</code>를 <code>WeekNavigator</code>로 교체했고, 날짜 선택·주 이동·날짜별 Todo 개수·주 시작일 저장과 복원을 연결했습니다.</span>
+        </div>
+
+        <div class="grid two">
+          <article class="card">
+            <h3>selectedDate</h3>
+            <p>실제로 Todo를 추가하고 조회하는 대상 날짜입니다.</p>
+          </article>
+          <article class="card">
+            <h3>weekStartDate</h3>
+            <p>화면에 보여줄 월요일부터 일요일 범위를 결정합니다.</p>
+          </article>
+        </div>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>두 state의 불변식</h3>
+          <pre><code>weekStartDate는 표시 주의 월요일
+selectedDate는 표시 주간 7일 안에 포함
+selectedDate는 Todo 입력·목록과 동일한 날짜
+주 이동 시 둘 다 같은 방향으로 7일 이동</code></pre>
+          <p class="muted">주 시작만 이동하면 화면은 다음 주인데 목록은 이전 주 selectedDate를 가리키는 불일치가 생깁니다.</p>
+        </article>
+
+        <article class="exercise" data-exercise="weekly">
+          <div class="exercise-header">
+            <h3>직접 설계: 주 이동 후보 계산</h3>
+            <span class="difficulty">도전</span>
+          </div>
+          <textarea class="code-editor">const handleMoveWeek = (delta) => {
+  // weekStartDate와 selectedDate를 직접 수정하지 말고
+  // 각각 복사한 뒤 delta일 이동한 후보를 만드세요.
+
+}</textarea>
+          <div class="exercise-actions">
+            <button class="action-button check-code" data-requires="createMidnightDate(weekStartDate)|createMidnightDate(selectedDate)|setDate|delta">내 코드 확인</button>
+            <button class="action-button secondary show-hint">힌트</button>
+            <button class="action-button secondary show-answer">예시 비교</button>
+          </div>
+          <p class="feedback"></p>
+          <div class="hidden-answer hint"><div class="callout">Date는 mutable이므로 두 state를 각각 복사한 새 객체가 필요합니다.</div></div>
+          <div class="hidden-answer answer"><pre><code>const nextWeekStart = createMidnightDate(weekStartDate)
+nextWeekStart.setDate(nextWeekStart.getDate() + delta)
+
+const nextSelectedDate = createMidnightDate(selectedDate)
+nextSelectedDate.setDate(nextSelectedDate.getDate() + delta)</code></pre></div>
+        </article>
+
+        <article class="card" style="margin-top: 16px;">
+          <h3>구현 후 설명할 수 있어야 하는 질문</h3>
+          <div class="concept-question">
+            <button class="question-button">주차 이동 시 selectedDate를 null로 만들면 왜 현재 앱과 충돌하나요?</button>
+            <p class="question-answer">현재 Todo 추가와 날짜 키 계산은 selectedDate가 항상 유효한 Date라는 계약을 사용합니다. null을 허용하면 입력 비활성화, 빈 목록 의미, storage 계약까지 모두 다시 설계해야 합니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">날짜별 Todo 개수는 어떤 배열에서 계산해야 하나요?</button>
+            <p class="question-answer">필터 결과가 아닌 전체 <code>todos</code>에서 날짜별 개수 맵을 파생해야 합니다. 그래야 현재 선택 날짜와 필터에 상관없이 주간 7일의 전체 개수를 표시할 수 있습니다.</p>
+          </div>
+          <textarea class="study-note" data-note="weekly" placeholder="selectedDate와 weekStartDate의 역할 차이를 적어보세요."></textarea>
+        </article>
+      </section>
+
+      <section class="panel" id="final" data-step="final">
+        <div class="section-heading">
+          <div>
+            <h2>최종 검토</h2>
+            <p>현재 작업 트리를 기준으로 구현된 부분, 확인할 개념, 보완할 항목을 구분합니다.</p>
+          </div>
+          <label class="done-label">
+            <input type="checkbox" class="step-done" data-step-key="final">
+            검토 완료
+          </label>
+        </div>
+
+        <article class="card">
+          <h3>현재 상태 요약</h3>
+          <div style="overflow-x: auto;">
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>항목</th>
+                  <th>상태</th>
+                  <th>근거 / 할 일</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>CRUD·필터·일간 뷰</td>
+                  <td><span class="status good">구현됨</span></td>
+                  <td>컴포넌트 분리, state 불변성, 날짜별 파생 목록이 적용됨</td>
+                </tr>
+                <tr>
+                  <td>localStorage</td>
+                  <td><span class="status good">강화 구현</span></td>
+                  <td>복원 검증, 자동 교정, 읽기·쓰기 실패 처리까지 포함</td>
+                </tr>
+                <tr>
+                  <td>자동화 테스트</td>
+                  <td><span class="status good">51개 통과</span></td>
+                  <td>CRUD·필터·주간 뷰·지속성·예외·날짜 경계 시나리오가 존재</td>
+                </tr>
+                <tr>
+                  <td>주간 뷰</td>
+                  <td><span class="status good">구현됨</span></td>
+                  <td><code>WeekNavigator</code>, 두 날짜 state, 날짜별 개수, 주차 저장·복원이 연결됨</td>
+                </tr>
+                <tr>
+                  <td>README</td>
+                  <td><span class="status todo">수정 필요</span></td>
+                  <td>현재 제목이 <code>kakao-assignment-1</code>이며 두 줄뿐임. 실행법·기능·구조·테스트를 작성해야 함</td>
+                </tr>
+                <tr>
+                  <td>불필요한 console / TODO</td>
+                  <td><span class="status good">없음</span></td>
+                  <td>프로덕션 <code>src</code>에서 console과 임시 TODO가 검색되지 않음</td>
+                </tr>
+                <tr>
+                  <td>코드 분량</td>
+                  <td><span class="status good">허용 범위</span></td>
+                  <td>App 206줄, WeekNavigator 134줄로 프로젝트 규칙 안에 있음</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <div class="grid two" style="margin-top: 16px;">
+          <article class="card">
+            <h3>꼭 알아야 할 개념 8개</h3>
+            <div class="checklist">
+              <label><input type="checkbox" data-concept="state-owner">App과 자식 컴포넌트의 state 소유권</label>
+              <label><input type="checkbox" data-concept="immutability">map/filter/spread를 사용하는 불변성</label>
+              <label><input type="checkbox" data-concept="props-flow">props 내려가기와 callback 올라오기</label>
+              <label><input type="checkbox" data-concept="derived">todosForDate와 filteredTodos가 파생값인 이유</label>
+              <label><input type="checkbox" data-concept="edit">editingId와 editText를 나눈 이유</label>
+              <label><input type="checkbox" data-concept="lazy">lazy initializer의 목적</label>
+              <label><input type="checkbox" data-concept="effect">Effect 의존성 배열의 의미</label>
+              <label><input type="checkbox" data-concept="validation">storage 데이터를 검증하는 이유</label>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>추천 학습 순서</h3>
+            <ol>
+              <li>이 HTML에서 전체 지도와 CRUD를 설명한다.</li>
+              <li><code>App.jsx</code>에서 state와 handler에만 표시한다.</li>
+              <li>Todo 하나 추가하면서 callback 흐름을 손으로 적는다.</li>
+              <li>필터와 날짜를 각각 한 번 변경해 파생값을 추적한다.</li>
+              <li>localStorage를 지우고 손상시켜 복원 흐름을 확인한다.</li>
+              <li>테스트 이름 51개를 읽어 보장하는 행동을 분류한다.</li>
+              <li>README를 직접 작성하며 프로젝트를 자기 말로 요약한다.</li>
+            </ol>
+          </article>
+        </div>
+
+        <div class="callout danger">
+          <strong>직접 수정하기 가장 좋은 첫 작업</strong>
+          <span>README를 본인이 직접 작성하세요. 코드 변경 위험은 낮지만 프로젝트 구조와 구현 기능을 자기 언어로 정리해야 하므로 이해도를 빠르게 드러냅니다.</span>
+        </div>
+
+        <article class="card">
+          <h3>개념 질문</h3>
+          <div class="concept-question">
+            <button class="question-button">App에 state가 너무 몰린 것 아닌가요?</button>
+            <p class="question-answer">현재 공유 state는 todos, editingId, filter, selectedDate, weekStartDate 다섯 개이고 여러 자식이 함께 사용합니다. 규모상 App이 조정자 역할을 하는 것이 합리적입니다. 더 커지면 useTodos 같은 custom hook으로 로직을 분리할 수 있지만 지금은 추상화 비용이 더 큽니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">storage 데이터를 별도 모듈에서 검증하는 이유는 무엇인가요?</button>
+            <p class="question-answer">외부 저장 데이터는 신뢰할 수 없고 React key 충돌이 실제 CRUD 오작동으로 이어질 수 있어 저장 경계에서 정규화합니다. UI 컴포넌트가 아닌 storage 모듈에 격리하면 복잡성이 다른 영역으로 퍼지지 않습니다.</p>
+          </div>
+          <div class="concept-question">
+            <button class="question-button">왜 모든 handler에서 저장하지 않았나요?</button>
+            <p class="question-answer">CRUD의 책임은 state 변경이고 영속성은 state 변화에 반응하는 Effect 책임입니다. 저장 호출 누락을 막고 같은 상태 변화 경로를 한 곳에서 처리합니다.</p>
+          </div>
+        </article>
+
+        <article class="exercise">
+          <div class="exercise-header">
+            <h3>최종 자기 설명</h3>
+            <span class="difficulty">학습 마무리</span>
+          </div>
+          <p>아래 네 문장을 본인 표현으로 완성하세요.</p>
+          <textarea class="study-note" data-note="final" placeholder="1. App이 소유하는 state는 ...&#10;2. Todo 추가 이벤트는 ...&#10;3. 화면에 표시되는 목록은 ...&#10;4. 새로고침 복원은 ..."></textarea>
+        </article>
+      </section>
+
+      <p class="footer-note">
+        이 자료는 현재 작업 트리의 App, components, utils, tests와 docs 마이그레이션 명세를 기준으로 생성되었습니다.
+      </p>
+    </main>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'kakao-react-migration-study-v1'
+    const STEP_KEYS = ['overview', 'setup', 'crud', 'filter', 'daily', 'storage', 'weekly', 'final']
+
+    const moduleDescriptions = {
+      app: '<strong>App.jsx</strong><br>공유 state의 단일 출처입니다. CRUD handler, 날짜 이동, 필터 변경을 조정하고 계산한 목록을 props로 내려줍니다.',
+      input: '<strong>TodoInput.jsx</strong><br>입력 중 문자열과 에러 메시지를 로컬 state로 관리합니다. 유효한 제출만 onAddTodo callback으로 App에 전달합니다.',
+      list: '<strong>TodoList / TodoItem</strong><br>목록을 map으로 렌더링합니다. TodoItem은 편집 draft와 포커스를 관리하고 실제 Todo 변경은 callback으로 App에 요청합니다.',
+      filter: '<strong>TodoFilter.jsx</strong><br>현재 filter를 props로 받아 radio UI를 표시합니다. 자체 필터 state는 없고 선택 이벤트만 App으로 올립니다.',
+      date: '<strong>WeekNavigator.jsx</strong><br>weekStartDate의 7일과 selectedDate 선택 상태, 날짜별 Todo 개수를 표시합니다. 실제 날짜 state와 이동 규칙은 App 책임입니다.',
+      storage: '<strong>utils/storage.js</strong><br>localStorage를 읽고 쓰며 외부 데이터를 검증·정규화합니다. React state setter나 UI 로직을 포함하지 않습니다.',
+      dateUtil: '<strong>utils/date.js</strong><br>Date 복사, 날짜 키 변환, 실제 달력 날짜 검증을 담당합니다. 타임존 파싱 오류가 UI에 퍼지지 않게 합니다.',
+      tests: '<strong>App.test.jsx</strong><br>구현 내부가 아니라 사용자가 클릭하고 보게 되는 행동을 검증합니다. 현재 51개 테스트가 CRUD, 주간 뷰와 저장 예외를 보호합니다.',
+    }
+
+    const flowDescriptions = {
+      add: 'TodoInput submit → onAddTodo → App.handleAddTodo → todos 새 배열 → todosForDate / filteredTodos 재계산 → TodoList 리렌더',
+      filter: 'TodoFilter radio change → onFilterChange → App.setFilter → filteredTodos 재계산 → TodoList 리렌더',
+      date: 'WeekNavigator 날짜 click → handleSelectDate → selectedDate 새 Date → todosForDate / filteredTodos 재계산 → 선택 셀과 목록 리렌더',
+    }
+
+    function readState() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) ?? {}
+      } catch {
+        return {}
+      }
+    }
+
+    let studyState = readState()
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(studyState))
+    }
+
+    function showPanel(panelId) {
+      document.querySelectorAll('.panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.id === panelId)
+      })
+
+      document.querySelectorAll('.step-button').forEach((button) => {
+        button.setAttribute('aria-selected', String(button.dataset.panel === panelId))
+      })
+
+      studyState.currentPanel = panelId
+      saveState()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+
+    function updateProgress() {
+      const completed = STEP_KEYS.filter((key) => studyState.completed?.[key]).length
+      const percent = Math.round((completed / STEP_KEYS.length) * 100)
+      document.getElementById('progressText').textContent = `${completed} / ${STEP_KEYS.length}`
+      document.getElementById('progressBar').style.width = `${percent}%`
+    }
+
+    function restoreState() {
+      const currentPanel = STEP_KEYS.includes(studyState.currentPanel)
+        ? studyState.currentPanel
+        : 'overview'
+
+      document.querySelectorAll('.step-done').forEach((checkbox) => {
+        checkbox.checked = Boolean(studyState.completed?.[checkbox.dataset.stepKey])
+      })
+
+      document.querySelectorAll('.study-note').forEach((textarea) => {
+        textarea.value = studyState.notes?.[textarea.dataset.note] ?? ''
+      })
+
+      document.querySelectorAll('[data-concept]').forEach((checkbox) => {
+        checkbox.checked = Boolean(studyState.concepts?.[checkbox.dataset.concept])
+      })
+
+      showPanel(currentPanel)
+      updateProgress()
+    }
+
+    document.querySelectorAll('.step-button').forEach((button) => {
+      button.addEventListener('click', () => showPanel(button.dataset.panel))
+    })
+
+    document.querySelectorAll('.step-done').forEach((checkbox) => {
+      checkbox.addEventListener('change', () => {
+        studyState.completed ??= {}
+        studyState.completed[checkbox.dataset.stepKey] = checkbox.checked
+        saveState()
+        updateProgress()
+      })
+    })
+
+    document.querySelectorAll('.study-note').forEach((textarea) => {
+      textarea.addEventListener('input', () => {
+        studyState.notes ??= {}
+        studyState.notes[textarea.dataset.note] = textarea.value
+        saveState()
+      })
+    })
+
+    document.querySelectorAll('[data-concept]').forEach((checkbox) => {
+      checkbox.addEventListener('change', () => {
+        studyState.concepts ??= {}
+        studyState.concepts[checkbox.dataset.concept] = checkbox.checked
+        saveState()
+      })
+    })
+
+    document.querySelectorAll('.module-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.module-button').forEach((item) => {
+          item.classList.toggle('active', item === button)
+        })
+        document.getElementById('moduleDetail').innerHTML =
+          moduleDescriptions[button.dataset.module]
+      })
+    })
+
+    document.getElementById('moduleDetail').innerHTML = moduleDescriptions.app
+
+    document.querySelectorAll('[data-flow]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        document.querySelectorAll('.simulator-node').forEach((node) => {
+          node.classList.remove('active')
+        })
+
+        for (let index = 0; index < 5; index += 1) {
+          await new Promise((resolve) => setTimeout(resolve, 170))
+          document.querySelector(`[data-flow-node="${index}"]`).classList.add('active')
+        }
+
+        document.getElementById('flowExplanation').textContent =
+          flowDescriptions[button.dataset.flow]
+      })
+    })
+
+    document.querySelectorAll('.question-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        const answer = button.nextElementSibling
+        const isOpen = answer.classList.toggle('open')
+        button.setAttribute('aria-expanded', String(isOpen))
+      })
+    })
+
+    document.querySelectorAll('.show-hint').forEach((button) => {
+      button.addEventListener('click', () => {
+        button.closest('.exercise').querySelector('.hint').classList.toggle('open')
+      })
+    })
+
+    document.querySelectorAll('.show-answer').forEach((button) => {
+      button.addEventListener('click', () => {
+        button.closest('.exercise').querySelector('.answer').classList.toggle('open')
+      })
+    })
+
+    document.querySelectorAll('.check-code').forEach((button) => {
+      button.addEventListener('click', () => {
+        const exercise = button.closest('.exercise')
+        const code = exercise.querySelector('.code-editor').value
+        const requiredTokens = button.dataset.requires.split('|')
+        const missingTokens = requiredTokens.filter((token) => !code.includes(token))
+        const feedback = exercise.querySelector('.feedback')
+
+        if (missingTokens.length === 0) {
+          feedback.textContent = '핵심 요소가 모두 들어갔습니다. 정답을 열어 표현 차이를 비교하세요.'
+          feedback.className = 'feedback success'
+          return
+        }
+
+        feedback.textContent = `아직 확인할 요소: ${missingTokens.join(', ')}`
+        feedback.className = 'feedback error'
+      })
+    })
+
+    document.getElementById('exportNotes').addEventListener('click', () => {
+      const noteText = STEP_KEYS
+        .map((key) => `## ${key}\n${studyState.notes?.[key] ?? '(메모 없음)'}`)
+        .join('\n\n')
+      const blob = new Blob([noteText], { type: 'text/markdown;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'react-todo-study-notes.md'
+      link.click()
+      URL.revokeObjectURL(url)
+    })
+
+    document.getElementById('resetProgress').addEventListener('click', () => {
+      const shouldReset = window.confirm('학습 완료 상태와 메모를 모두 초기화할까요?')
+      if (!shouldReset) {
+        return
+      }
+
+      localStorage.removeItem(STORAGE_KEY)
+      studyState = {}
+      restoreState()
+    })
+
+    restoreState()
+  </script>
+</body>
+</html>
